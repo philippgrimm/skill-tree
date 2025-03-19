@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import ReactConfetti from 'react-confetti';
 
 // Setup axios with CSRF token
 axios.defaults.withCredentials = true;
@@ -58,6 +59,41 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     return JSON.parse(localStorage.getItem('skillTreeProgress') || '{}');
   });
 
+  // State for confetti
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiKey, setConfettiKey] = useState(0);
+
+  // State to track expanded/collapsed branches
+  const [expandedBranches, setExpandedBranches] = useState<Record<number, boolean>>(() => {
+    // Initialize all branches as expanded
+    const expanded: Record<number, boolean> = {};
+    const setBranchExpanded = (branch: Branch) => {
+      expanded[branch.id] = true;
+      branch.children?.forEach(setBranchExpanded);
+    };
+    branches.forEach(setBranchExpanded);
+    return expanded;
+  });
+
+  // Toggle branch expansion
+  const toggleBranch = (branchId: number) => {
+    setExpandedBranches(prev => ({
+      ...prev,
+      [branchId]: !prev[branchId]
+    }));
+  };
+
+  // Check if all leaves in a branch are completed
+  const areAllLeavesCompleted = (branch: Branch, state: Record<number, boolean> = completed): boolean => {
+    const branchLeaves = branch.leaves || [];
+    const allLeavesCompleted = branchLeaves.every(leaf => state[leaf.id]);
+
+    // Check child branches recursively
+    const allChildrenCompleted = (branch.children || []).every(child => areAllLeavesCompleted(child, state));
+
+    return allLeavesCompleted && allChildrenCompleted;
+  };
+
   // Toggle leaf completion status
   const toggleLeafCompletion = async (leaf: Leaf, branchLeaves: Leaf[]) => {
     if (isAuthenticated) {
@@ -81,6 +117,26 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
         });
 
         setCompleted(newCompletedMap);
+
+        // Check if this completion completed all leaves in the branch
+        const branch = findBranchContainingLeaf(leaf.id, branches);
+        console.log('Debug confetti:', {
+          branchFound: !!branch,
+          branchName: branch?.name,
+          allLeavesCompleted: branch ? areAllLeavesCompleted(branch, newCompletedMap) : false,
+          leafWasCompleted: newCompletedMap[leaf.id],
+          leafId: leaf.id,
+          currentCompleted: completed[leaf.id],
+          newCompletedMap: newCompletedMap[leaf.id]
+        });
+
+        if (branch && areAllLeavesCompleted(branch, newCompletedMap) && newCompletedMap[leaf.id]) {
+          console.log('Triggering confetti!');
+          setShowConfetti(true);
+          setConfettiKey(prev => prev + 1);
+          // Hide confetti after 5 seconds
+          setTimeout(() => setShowConfetti(false), 5000);
+        }
       } catch (error) {
         console.error('Error toggling leaf completion:', error);
         if (axios.isAxiosError(error) && error.response?.status === 422) {
@@ -97,7 +153,39 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
       };
       setCompleted(newCompleted);
       localStorage.setItem('skillTreeProgress', JSON.stringify(newCompleted));
+
+      // Check if this completion completed all leaves in the branch
+      const branch = findBranchContainingLeaf(leaf.id, branches);
+      console.log('Debug confetti (local):', {
+        branchFound: !!branch,
+        branchName: branch?.name,
+        allLeavesCompleted: branch ? areAllLeavesCompleted(branch, newCompleted) : false,
+        leafWasCompleted: newCompleted[leaf.id],
+        leafId: leaf.id,
+        currentCompleted: completed[leaf.id],
+        newCompleted: newCompleted[leaf.id]
+      });
+
+      if (branch && areAllLeavesCompleted(branch, newCompleted) && newCompleted[leaf.id]) {
+        console.log('Triggering confetti!');
+        setShowConfetti(true);
+        setConfettiKey(prev => prev + 1);
+        // Hide confetti after 5 seconds
+        setTimeout(() => setShowConfetti(false), 5000);
+      }
     }
+  };
+
+  // Helper function to find a branch containing a specific leaf
+  const findBranchContainingLeaf = (leafId: number, branches: Branch[]): Branch | null => {
+    for (const branch of branches) {
+      if (branch.leaves?.some(leaf => leaf.id === leafId)) {
+        return branch;
+      }
+      const found = findBranchContainingLeaf(leafId, branch.children || []);
+      if (found) return found;
+    }
+    return null;
   };
 
   // Get completion percentage for a branch
@@ -125,7 +213,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     const previousLeaves = branchLeaves.filter(l => l.order < leaf.order);
 
     // If all previous leaves are completed, this leaf can be completed
-    return previousLeaves.every(l => completed[l.id]);
+    return previousLeaves.every(l => completed[l.id]) || completed[leaf.id];
   };
 
   // Render a branch with its leaves
@@ -133,11 +221,18 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     const progress = getBranchProgress(branch);
     const leaves = branch.leaves || [];
     const children = branch.children || [];
+    const isExpanded = expandedBranches[branch.id];
+    const hasChildren = children.length > 0;
+    const hasLeaves = leaves.length > 0;
 
     return (
       <div key={branch.id} className="relative mb-8">
         {/* Main vertical line that runs through the entire branch and its children */}
-        <div className="absolute left-3 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
+        <div
+          className={`absolute left-3 top-0 w-px bg-gray-200 dark:bg-gray-700 transition-all duration-300 ${
+            isExpanded ? 'h-full' : 'h-12'
+          }`}
+        />
 
         {/* Branch header */}
         <div className="relative flex items-start">
@@ -145,14 +240,31 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
           <div className="absolute left-3 top-6 w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 z-10 -translate-x-[3px] -translate-y-[3px]" />
 
           {/* Horizontal connector */}
-          <div className="absolute left-3 top-[26px] w-4 h-px bg-gray-200 dark:bg-gray-700" />
+          <div className="absolute left-3 top-[24.5px] w-4 h-px bg-gray-200 dark:bg-gray-700" />
 
           {/* Branch content */}
           <div className="ml-8 flex-grow pt-2">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                {branch.name}
-              </h2>
+              <div className="flex items-center gap-2">
+                {(hasChildren || hasLeaves) && (
+                  <button
+                    onClick={() => toggleBranch(branch.id)}
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <svg
+                      className={`w-4 h-4 transform transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                  {branch.name}
+                </h2>
+              </div>
               <span className="text-sm text-gray-500">
                 {progress}% complete
               </span>
@@ -175,7 +287,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
             </div>
 
             {/* Leaves list */}
-            {leaves.length > 0 && (
+            {isExpanded && hasLeaves && (
               <div className="mt-4 space-y-1">
                 {leaves.map((leaf) => renderLeaf(leaf, leaves))}
               </div>
@@ -184,12 +296,16 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
         </div>
 
         {/* Child branches */}
-        {children.length > 0 && (
+        {isExpanded && hasChildren && (
           <div className="mt-4 ml-6 space-y-8">
-            {children.map((child) => (
+            {children.map((child, index) => (
               <div key={child.id} className="relative">
                 {/* Horizontal connector to child */}
-                <div className="absolute left-[-12px] top-6 w-3 h-px bg-gray-200 dark:bg-gray-700" />
+                <div className="absolute left-[-12px] top-6 w-6 h-px bg-gray-200 dark:bg-gray-700" />
+                {/* Vertical line for last child */}
+                {index === children.length - 1 && (
+                  <div className="absolute left-[-12px] top-6 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
+                )}
                 {renderBranch(child)}
               </div>
             ))}
@@ -210,16 +326,16 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
         onClick={() => canBeCompleted || isCompleted ? toggleLeafCompletion(leaf, branchLeaves) : null}
         className={`
           group relative flex items-center py-2
-          ${canBeCompleted ? 'cursor-pointer' : 'opacity-60'}
+
         `}
       >
         {/* Node marker with horizontal connector */}
-        <div className="relative flex items-center mr-3">
+        <div className="relative flex items-center mr-3 cursor-pointer">
           {/* Horizontal connector for all leaves */}
-          <div className="absolute left-[-21px] w-3 h-px bg-gray-200 dark:bg-gray-700" />
+          <div className="absolute left-[-18px] w-4 h-px bg-gray-200 dark:bg-gray-700 ${canBeCompleted ? 'cursor-pointer' : 'opacity-60'}" />
           <div className={`
-            absolute left-[-21px] w-1.5 h-1.5 rounded-full transition-colors duration-200
-            -translate-x-[3px] -translate-y-[3px]
+            absolute left-[-22.5px] w-1.5 h-1.5 rounded-full transition-colors duration-200
+
             ${isCompleted
               ? 'bg-green-500 ring-2 ring-green-500/30 ring-offset-2 dark:ring-offset-gray-800'
               : canBeCompleted
@@ -284,6 +400,18 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Skill Tree" />
       <div className="flex h-full flex-1 flex-col gap-4 p-4">
+        {showConfetti && (
+          <ReactConfetti
+            key={confettiKey}
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={200}
+            gravity={0.3}
+            onConfettiComplete={() => setShowConfetti(false)}
+            style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none' }}
+          />
+        )}
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-wrap items-center justify-between mb-8 gap-4">
             <div>
