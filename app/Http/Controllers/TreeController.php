@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Leaf;
+use App\Models\UserLeafProgress;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class TreeController extends Controller
@@ -57,8 +59,22 @@ class TreeController extends Controller
             return $branchData;
         });
 
+        // Get user's completed leaves if authenticated
+        $completedLeaves = [];
+        $isAuthenticated = Auth::check();
+
+        if ($isAuthenticated) {
+            $user = Auth::user();
+            $completedLeaves = UserLeafProgress::where('user_id', $user->id)
+                ->where('completed', true)
+                ->pluck('leaf_id')
+                ->toArray();
+        }
+
         return Inertia::render('Tree', [
             'branches' => $formattedBranches,
+            'completedLeaves' => $completedLeaves,
+            'isAuthenticated' => $isAuthenticated,
         ]);
     }
 }

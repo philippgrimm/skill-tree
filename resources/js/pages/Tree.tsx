@@ -1,5 +1,14 @@
 import { Head } from '@inertiajs/react';
+import axios from 'axios';
 import { useState } from 'react';
+
+// Setup axios with CSRF token
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+const token = document.head.querySelector('meta[name="csrf-token"]');
+if (token) {
+    axios.defaults.headers.common['X-CSRF-TOKEN'] = token.getAttribute('content');
+}
 
 // Types
 interface Leaf {
@@ -22,6 +31,8 @@ interface Branch {
 
 interface TreeProps {
   branches: Branch[];
+  completedLeaves: number[]; // IDs of leaves completed by the authenticated user
+  isAuthenticated: boolean;
 }
 
 /**
@@ -29,37 +40,76 @@ interface TreeProps {
  *
  * A standalone page for displaying the skill tree and tracking user progress.
  */
-export default function Tree({ branches }: TreeProps) {
+export default function Tree({ branches, completedLeaves, isAuthenticated }: TreeProps) {
   // State to track completed leaves
-  const [completedLeaves, setCompletedLeaves] = useState<Record<number, boolean>>(
-    // Load from localStorage if available
-    JSON.parse(localStorage.getItem('skillTreeProgress') || '{}')
-  );
+  const [completed, setCompleted] = useState<Record<number, boolean>>(() => {
+    // If authenticated, use server-provided completedLeaves
+    if (isAuthenticated) {
+      const completedMap: Record<number, boolean> = {};
+      completedLeaves.forEach(leafId => {
+        completedMap[leafId] = true;
+      });
+      return completedMap;
+    }
+
+    // If not authenticated, use localStorage
+    return JSON.parse(localStorage.getItem('skillTreeProgress') || '{}');
+  });
 
   // Toggle leaf completion status
-  const toggleLeafCompletion = (leafId: number) => {
-    const newCompleted = {
-      ...completedLeaves,
-      [leafId]: !completedLeaves[leafId]
-    };
-    setCompletedLeaves(newCompleted);
+  const toggleLeafCompletion = async (leaf: Leaf, branchLeaves: Leaf[]) => {
+    if (isAuthenticated) {
+      try {
+        // Check if leaf can be completed (all previous leaves with lower order must be completed)
+        const canBeCompleted = canCompleteLeaf(leaf, branchLeaves);
+        if (!canBeCompleted && !completed[leaf.id]) {
+          alert('You need to complete previous leaves first');
+          return;
+        }
 
-    // Save to localStorage
-    localStorage.setItem('skillTreeProgress', JSON.stringify(newCompleted));
+        // Call API to toggle completion
+        const response = await axios.post(`/api/leaf-progress/${leaf.id}/toggle`, {
+          validate_order: true
+        });
+
+        // Update state with the new completion data
+        const newCompletedMap: Record<number, boolean> = {};
+        response.data.completed_leaves.forEach((id: number) => {
+          newCompletedMap[id] = true;
+        });
+
+        setCompleted(newCompletedMap);
+      } catch (error) {
+        console.error('Error toggling leaf completion:', error);
+        if (axios.isAxiosError(error) && error.response?.status === 422) {
+          alert(error.response.data.error || 'You need to complete previous leaves first');
+        } else {
+          alert('Failed to update progress. Please try again.');
+        }
+      }
+    } else {
+      // Use localStorage for non-authenticated users
+      const newCompleted = {
+        ...completed,
+        [leaf.id]: !completed[leaf.id]
+      };
+      setCompleted(newCompleted);
+      localStorage.setItem('skillTreeProgress', JSON.stringify(newCompleted));
+    }
   };
 
   // Get completion percentage for a branch
   const getBranchProgress = (branch: Branch): number => {
     // Count all leaves in this branch and its children
     let totalLeaves = branch.leaves?.length || 0;
-    let completedCount = branch.leaves?.filter(leaf => completedLeaves[leaf.id])?.length || 0;
+    let completedCount = branch.leaves?.filter(leaf => completed[leaf.id])?.length || 0;
 
     // Include leaves from child branches - safely handle potentially undefined children
     if (branch.children && Array.isArray(branch.children)) {
       branch.children.forEach(child => {
         if (child.leaves) {
           totalLeaves += child.leaves.length;
-          completedCount += child.leaves.filter(leaf => completedLeaves[leaf.id]).length;
+          completedCount += child.leaves.filter(leaf => completed[leaf.id]).length;
         }
       });
     }
@@ -73,12 +123,12 @@ export default function Tree({ branches }: TreeProps) {
     const previousLeaves = branchLeaves.filter(l => l.order < leaf.order);
 
     // If all previous leaves are completed, this leaf can be completed
-    return previousLeaves.every(l => completedLeaves[l.id]);
+    return previousLeaves.every(l => completed[l.id]);
   };
 
   // Render a leaf
   const renderLeaf = (leaf: Leaf, branchLeaves: Leaf[]) => {
-    const isCompleted = !!completedLeaves[leaf.id];
+    const isCompleted = !!completed[leaf.id];
     const canBeCompleted = canCompleteLeaf(leaf, branchLeaves);
 
     return (
@@ -91,12 +141,12 @@ export default function Tree({ branches }: TreeProps) {
             'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 opacity-60'
           }
         `}
-        onClick={() => canBeCompleted && toggleLeafCompletion(leaf.id)}
+        onClick={() => canBeCompleted || isCompleted ? toggleLeafCompletion(leaf, branchLeaves) : null}
       >
         <div className="flex items-center">
-          <div className={`w-5 h-5 rounded-full mr-3 ${isCompleted ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+          <div className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${isCompleted ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
             {isCompleted && (
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             )}
@@ -154,9 +204,23 @@ export default function Tree({ branches }: TreeProps) {
   };
 
   // Reset progress
-  const resetProgress = () => {
-    if (confirm('Are you sure you want to reset your progress?')) {
-      setCompletedLeaves({});
+  const resetProgress = async () => {
+    if (!confirm('Are you sure you want to reset your progress?')) {
+      return;
+    }
+
+    if (isAuthenticated) {
+      try {
+        // Call API to reset progress
+        await axios.post('/api/leaf-progress/reset');
+        setCompleted({});
+      } catch (error) {
+        console.error('Error resetting progress:', error);
+        alert('Failed to reset progress. Please try again.');
+      }
+    } else {
+      // Reset localStorage for non-authenticated users
+      setCompleted({});
       localStorage.removeItem('skillTreeProgress');
     }
   };
@@ -168,12 +232,21 @@ export default function Tree({ branches }: TreeProps) {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Your Skill Tree 🌳</h1>
-            <button
-              onClick={resetProgress}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              Reset Progress
-            </button>
+            <div className="space-x-4 flex items-center">
+              {!isAuthenticated && (
+                <div className="text-sm text-amber-600 dark:text-amber-400">
+                  <span className="bg-amber-100 dark:bg-amber-900 p-1 rounded">
+                    ⚠️ Login to save your progress across devices
+                  </span>
+                </div>
+              )}
+              <button
+                onClick={resetProgress}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Reset Progress
+              </button>
+            </div>
           </div>
 
           {branches.length === 0 ? (

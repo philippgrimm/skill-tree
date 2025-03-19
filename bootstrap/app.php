@@ -21,6 +21,21 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // Configure API middleware group with Sanctum
+        $middleware->api(append: [
+            // No append middlewares needed
+        ]);
+
+        // Add Sanctum's stateful middleware
+        $middleware->alias([
+            'auth.sanctum' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+
+        // Add middleware to the api group
+        $middleware->appendToGroup('api', [
+            'auth.sanctum',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

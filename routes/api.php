@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\API\BranchController;
 use App\Http\Controllers\API\LeafController;
+use App\Http\Controllers\API\LeafProgressController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,7 +18,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware([
+    EnsureFrontendRequestsAreStateful::class,
+    'auth:sanctum',
+])->get('/user', function (Request $request) {
     return $request->user();
 });
 
@@ -35,3 +40,13 @@ Route::post('/leaves', [LeafController::class, 'store']);
 Route::get('/leaves/{leaf}', [LeafController::class, 'show']);
 Route::put('/leaves/{leaf}', [LeafController::class, 'update']);
 Route::delete('/leaves/{leaf}', [LeafController::class, 'destroy']);
+
+// Leaf progress routes (requires authentication)
+Route::middleware([
+    EnsureFrontendRequestsAreStateful::class,
+    'auth:sanctum',
+])->group(function () {
+    Route::get('/leaf-progress', [LeafProgressController::class, 'index']);
+    Route::post('/leaf-progress/{leaf}/toggle', [LeafProgressController::class, 'toggle']);
+    Route::post('/leaf-progress/reset', [LeafProgressController::class, 'reset']);
+});

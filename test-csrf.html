@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Test Sanctum Authentication</title>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            button,
+            input {
+                padding: 10px;
+                margin: 5px;
+            }
+            pre {
+                background-color: #f5f5f5;
+                padding: 10px;
+                border-radius: 5px;
+                overflow: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Test Sanctum Authentication</h1>
+
+        <div>
+            <h2>CSRF Protection</h2>
+            <button id="getCsrfToken">Get CSRF Token</button>
+            <pre id="csrfResult">Results will appear here...</pre>
+        </div>
+
+        <div>
+            <h2>Login</h2>
+            <div>
+                <input type="email" id="email" placeholder="Email" value="test@example.com" />
+                <input type="password" id="password" placeholder="Password" value="password" />
+                <button id="login">Login</button>
+            </div>
+            <pre id="loginResult">Results will appear here...</pre>
+        </div>
+
+        <div>
+            <h2>Test Protected Route</h2>
+            <button id="testApi">Test API</button>
+            <pre id="apiResult">Results will appear here...</pre>
+        </div>
+
+        <div>
+            <h2>User Info</h2>
+            <button id="getUser">Get User Info</button>
+            <pre id="userResult">Results will appear here...</pre>
+        </div>
+
+        <div>
+            <h2>Toggle Leaf Completion</h2>
+            <input type="number" id="leafId" placeholder="Leaf ID" value="139" />
+            <button id="toggleLeaf">Toggle Leaf Completion</button>
+            <pre id="leafResult">Results will appear here...</pre>
+        </div>
+
+        <script>
+            // Configure Axios
+            axios.defaults.withCredentials = true;
+            axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+            // Get CSRF token
+            document.getElementById('getCsrfToken').addEventListener('click', async () => {
+                try {
+                    const response = await axios.get('/sanctum/csrf-cookie');
+                    const token = document.cookie.split('; ').find((row) => row.startsWith('XSRF-TOKEN='));
+                    document.getElementById('csrfResult').textContent = 'CSRF token received: ' + (token ? 'Success' : 'Failed');
+                } catch (error) {
+                    document.getElementById('csrfResult').textContent = 'Error: ' + JSON.stringify(error.response?.data || error.message, null, 2);
+                }
+            });
+
+            // Login
+            document.getElementById('login').addEventListener('click', async () => {
+                try {
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+
+                    const response = await axios.post('/login', {
+                        email,
+                        password,
+                        remember: true,
+                    });
+
+                    document.getElementById('loginResult').textContent = 'Login successful!';
+                } catch (error) {
+                    document.getElementById('loginResult').textContent = 'Error: ' + JSON.stringify(error.response?.data || error.message, null, 2);
+                }
+            });
+
+            // Test API
+            document.getElementById('testApi').addEventListener('click', async () => {
+                try {
+                    const response = await axios.get('/api/user');
+                    document.getElementById('apiResult').textContent = JSON.stringify(response.data, null, 2);
+                } catch (error) {
+                    document.getElementById('apiResult').textContent = 'Error: ' + JSON.stringify(error.response?.data || error.message, null, 2);
+                }
+            });
+
+            // Get User Info
+            document.getElementById('getUser').addEventListener('click', async () => {
+                try {
+                    const response = await axios.get('/api/user');
+                    document.getElementById('userResult').textContent = JSON.stringify(response.data, null, 2);
+                } catch (error) {
+                    document.getElementById('userResult').textContent = 'Error: ' + JSON.stringify(error.response?.data || error.message, null, 2);
+                }
+            });
+
+            // Toggle Leaf Completion
+            document.getElementById('toggleLeaf').addEventListener('click', async () => {
+                try {
+                    const leafId = document.getElementById('leafId').value;
+                    const response = await axios.post(`/api/leaf-progress/${leafId}/toggle`, {
+                        validate_order: true,
+                    });
+                    document.getElementById('leafResult').textContent = JSON.stringify(response.data, null, 2);
+                } catch (error) {
+                    document.getElementById('leafResult').textContent = 'Error: ' + JSON.stringify(error.response?.data || error.message, null, 2);
+                }
+            });
+        </script>
+    </body>
+</html>
