@@ -143,7 +143,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
           <div className="absolute left-3 top-6 w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 z-10 -translate-x-[3px] -translate-y-[3px]" />
 
           {/* Horizontal connector */}
-          <div className="absolute left-3 top-[26px] w-4 h-px bg-gray-200 dark:bg-gray-700" />
+          <div className="absolute left-3 top-[24.5px] w-4 h-px bg-gray-200 dark:bg-gray-700" />
 
           {/* Branch content */}
           <div className="ml-8 flex-grow pt-2">
@@ -187,7 +187,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
             {children.map((child) => (
               <div key={child.id} className="relative">
                 {/* Horizontal connector to child */}
-                <div className="absolute left-[-12px] top-6 w-3 h-px bg-gray-200 dark:bg-gray-700" />
+                <div className="absolute left-[-12px] top-6 w-6 h-px bg-gray-200 dark:bg-gray-700" />
                 {renderBranch(child)}
               </div>
             ))}
@@ -208,16 +208,16 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
         onClick={() => canBeCompleted || isCompleted ? toggleLeafCompletion(leaf, branchLeaves) : null}
         className={`
           group relative flex items-center py-2
-          ${canBeCompleted ? 'cursor-pointer' : 'opacity-60'}
+
         `}
       >
         {/* Node marker with horizontal connector */}
-        <div className="relative flex items-center mr-3">
+        <div className="relative flex items-center mr-3 cursor-pointer">
           {/* Horizontal connector for all leaves */}
-          <div className="absolute left-[-21px] w-3 h-px bg-gray-200 dark:bg-gray-700" />
+          <div className="absolute left-[-18px] w-4 h-px bg-gray-200 dark:bg-gray-700 ${canBeCompleted ? 'cursor-pointer' : 'opacity-60'}" />
           <div className={`
-            absolute left-[-21px] w-1.5 h-1.5 rounded-full transition-colors duration-200
-            -translate-x-[3px] -translate-y-[3px]
+            absolute left-[-22.5px] w-1.5 h-1.5 rounded-full transition-colors duration-200
+
             ${isCompleted
               ? 'bg-green-500 ring-2 ring-green-500/30 ring-offset-2 dark:ring-offset-gray-800'
               : canBeCompleted
