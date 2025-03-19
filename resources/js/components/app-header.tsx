@@ -14,8 +14,13 @@ import { LayoutGrid, Menu, GitFork } from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
+// Extended NavItem type with access control
+interface NavItemWithAccess extends NavItem {
+    adminOnly?: boolean;
+}
+
 // Available pages navigation links
-const rightNavItems: NavItem[] = [
+const allNavItems: NavItemWithAccess[] = [
     {
         title: 'Skill Tree',
         href: '/tree',
@@ -25,6 +30,7 @@ const rightNavItems: NavItem[] = [
         title: 'Tree Admin',
         href: '/tree-admin',
         icon: LayoutGrid,
+        adminOnly: true,
     },
 ];
 
@@ -38,6 +44,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
+    
+    // Filter navigation items based on user admin status
+    const isAdmin = auth.user.is_admin || false;
+    const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
+
     return (
         <>
             <div className="border-sidebar-border/80 border-b">
@@ -58,7 +69,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 <div className="flex h-full flex-1 flex-col space-y-4 p-4">
                                     <div className="flex h-full flex-col justify-between text-sm">
                                         <div className="flex flex-col space-y-4">
-                                            {rightNavItems.map((item) => (
+                                            {navItems.map((item) => (
                                                 <Link key={item.title} href={item.href} className="flex items-center space-x-2 font-medium">
                                                     {item.icon && <Icon iconNode={item.icon} className="h-5 w-5" />}
                                                     <span>{item.title}</span>
@@ -79,7 +90,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
                         <NavigationMenu className="flex h-full items-stretch">
                             <NavigationMenuList className="flex h-full items-stretch space-x-2">
-                                {rightNavItems.map((item, index) => (
+                                {navItems.map((item, index) => (
                                     <NavigationMenuItem key={index} className="relative flex h-full items-center">
                                         <Link
                                             href={item.href}
