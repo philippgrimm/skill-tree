@@ -56,6 +56,26 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     return JSON.parse(localStorage.getItem('skillTreeProgress') || '{}');
   });
 
+  // State to track expanded/collapsed branches
+  const [expandedBranches, setExpandedBranches] = useState<Record<number, boolean>>(() => {
+    // Initialize all branches as expanded
+    const expanded: Record<number, boolean> = {};
+    const setBranchExpanded = (branch: Branch) => {
+      expanded[branch.id] = true;
+      branch.children?.forEach(setBranchExpanded);
+    };
+    branches.forEach(setBranchExpanded);
+    return expanded;
+  });
+
+  // Toggle branch expansion
+  const toggleBranch = (branchId: number) => {
+    setExpandedBranches(prev => ({
+      ...prev,
+      [branchId]: !prev[branchId]
+    }));
+  };
+
   // Toggle leaf completion status
   const toggleLeafCompletion = async (leaf: Leaf, branchLeaves: Leaf[]) => {
     if (isAuthenticated) {
@@ -131,11 +151,18 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     const progress = getBranchProgress(branch);
     const leaves = branch.leaves || [];
     const children = branch.children || [];
+    const isExpanded = expandedBranches[branch.id];
+    const hasChildren = children.length > 0;
+    const hasLeaves = leaves.length > 0;
 
     return (
       <div key={branch.id} className="relative mb-8">
         {/* Main vertical line that runs through the entire branch and its children */}
-        <div className="absolute left-3 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
+        <div
+          className={`absolute left-3 top-0 w-px bg-gray-200 dark:bg-gray-700 transition-all duration-300 ${
+            isExpanded ? 'h-full' : 'h-12'
+          }`}
+        />
 
         {/* Branch header */}
         <div className="relative flex items-start">
@@ -148,9 +175,26 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
           {/* Branch content */}
           <div className="ml-8 flex-grow pt-2">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                {branch.name}
-              </h2>
+              <div className="flex items-center gap-2">
+                {(hasChildren || hasLeaves) && (
+                  <button
+                    onClick={() => toggleBranch(branch.id)}
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <svg
+                      className={`w-4 h-4 transform transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                  {branch.name}
+                </h2>
+              </div>
               <span className="text-sm text-gray-500">
                 {progress}% complete
               </span>
@@ -173,7 +217,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
             </div>
 
             {/* Leaves list */}
-            {leaves.length > 0 && (
+            {isExpanded && hasLeaves && (
               <div className="mt-4 space-y-1">
                 {leaves.map((leaf) => renderLeaf(leaf, leaves))}
               </div>
@@ -182,12 +226,16 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
         </div>
 
         {/* Child branches */}
-        {children.length > 0 && (
+        {isExpanded && hasChildren && (
           <div className="mt-4 ml-6 space-y-8">
-            {children.map((child) => (
+            {children.map((child, index) => (
               <div key={child.id} className="relative">
                 {/* Horizontal connector to child */}
                 <div className="absolute left-[-12px] top-6 w-6 h-px bg-gray-200 dark:bg-gray-700" />
+                {/* Vertical line for last child */}
+                {index === children.length - 1 && (
+                  <div className="absolute left-[-12px] top-6 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
+                )}
                 {renderBranch(child)}
               </div>
             ))}
