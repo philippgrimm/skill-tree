@@ -1,6 +1,8 @@
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { useState } from 'react';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
 import ReactConfetti from 'react-confetti';
 
 // Setup axios with CSRF token
@@ -386,10 +388,18 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     }
   };
 
+  // Define breadcrumbs
+  const breadcrumbs: BreadcrumbItem[] = [
+    {
+      title: 'Skill Tree',
+      href: '/tree',
+    },
+  ];
+
   return (
-    <>
+    <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Skill Tree" />
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+      <div className="flex h-full flex-1 flex-col gap-4 p-4">
         {showConfetti && (
           <ReactConfetti
             key={confettiKey}
@@ -438,6 +448,6 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
           )}
         </div>
       </div>
-    </>
+    </AppLayout>
   );
 }
