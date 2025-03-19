@@ -22,9 +22,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::get('tree-admin', function () {
+        if (!\App\Guards\AdminGuard::check()) {
+            return redirect('/tree');
+        }
         return Inertia::render('tree-admin');
     })->name('tree-admin');
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
