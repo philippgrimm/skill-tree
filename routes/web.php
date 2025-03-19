@@ -17,10 +17,6 @@ Route::get('/test-auth', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-
     Route::get('tree-admin', function () {
         if (!\App\Guards\AdminGuard::check()) {
             return redirect('/tree');

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Plus, Edit, Trash2, Menu } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { type BreadcrumbItem } from '@/types';
 
 // Setup axios with CSRF token
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -362,8 +363,16 @@ export default function TreeAdmin() {
         </div>
     );
 
+    // Define breadcrumbs for the admin page
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Tree Admin',
+            href: '/tree-admin',
+        },
+    ];
+
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tree Admin" />
             <div className="flex h-full flex-1 flex-col gap-4 p-4">
                 <h1 className="text-2xl font-bold">Tree Administration</h1>
