@@ -1,11 +1,15 @@
 <?php
 
+use App\Http\Controllers\TreeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
+
+// Public route for the standalone tree page
+Route::get('/tree', [TreeController::class, 'index'])->name('tree');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

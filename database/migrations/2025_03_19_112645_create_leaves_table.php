@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('leaves', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            $table->string('name');
+            $table->text('content')->nullable();
+            $table->unsignedInteger('order')->default(0);
+            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
         });
     }
 

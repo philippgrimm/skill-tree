@@ -13,11 +13,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Create a test user only if running a fresh migration
+        if (User::count() === 0) {
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Run the skill tree seeder (will clear and recreate only skill tree data)
+        $this->call(SkillTreeSeeder::class);
     }
 }

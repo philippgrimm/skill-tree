@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->unsignedInteger('order')->default(0);
-            $table->foreignId('branch_id');
+            $table->unsignedBigInteger('branch_id')->nullable(); // No foreign key yet
         });
     }
 
