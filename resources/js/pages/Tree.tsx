@@ -126,42 +126,8 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     return previousLeaves.every(l => completed[l.id]);
   };
 
-  // Render a leaf
-  const renderLeaf = (leaf: Leaf, branchLeaves: Leaf[]) => {
-    const isCompleted = !!completed[leaf.id];
-    const canBeCompleted = canCompleteLeaf(leaf, branchLeaves);
-
-    return (
-      <div
-        key={leaf.id}
-        className={`
-          p-3 my-2 rounded-lg border
-          ${isCompleted ? 'bg-green-100 dark:bg-green-900 border-green-400' :
-            canBeCompleted ? 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' :
-            'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 opacity-60'
-          }
-        `}
-        onClick={() => canBeCompleted || isCompleted ? toggleLeafCompletion(leaf, branchLeaves) : null}
-      >
-        <div className="flex items-center">
-          <div className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${isCompleted ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-            {isCompleted && (
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </div>
-          <div>
-            <h3 className="font-medium">{leaf.name}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{leaf.content}</p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // Render a branch with its leaves
-  const renderBranch = (branch: Branch, isChild = false) => {
+  const renderBranch = (branch: Branch, isChild = false, level = 0) => {
     const progress = getBranchProgress(branch);
 
     // Ensure branch has leaves and children properties
@@ -169,36 +135,116 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     const children = branch.children || [];
 
     return (
-      <div key={branch.id} className={`mb-8 ${isChild ? 'ml-8' : ''}`}>
-        <div className="mb-2">
-          <h2 className={`text-xl font-bold ${isChild ? 'text-gray-700 dark:text-gray-300' : 'text-gray-900 dark:text-white'}`}>
-            {branch.name}
-          </h2>
-          {branch.description && (
-            <p className="text-gray-600 dark:text-gray-400">{branch.description}</p>
-          )}
+      <div key={branch.id} className="relative mb-6">
+        {/* Branch header with connector */}
+        <div className="relative flex items-start">
+          {/* Vertical trunk line */}
+          <div className="absolute left-3 top-0 bottom-0 w-[1px] bg-gray-200 dark:bg-gray-700" />
 
-          {/* Progress bar */}
-          <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full mt-2">
-            <div
-              className="bg-green-500 h-2 rounded-full"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-            {progress}% complete
+          {/* Horizontal connector line */}
+          <div className="absolute left-3 top-4 w-3 h-[1px] bg-gray-200 dark:bg-gray-700" />
+
+          {/* Branch header - aligned with horizontal spacing */}
+          <div className="ml-8 flex-grow">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                {branch.name}
+              </h2>
+
+              {/* Progress percentage badge */}
+              <span className="text-sm text-gray-500">
+                {progress}% complete
+              </span>
+            </div>
+
+            {branch.description && (
+              <p className="text-sm text-gray-500 mb-2">{branch.description}</p>
+            )}
+
+            {/* Progress bar */}
+            <div className="w-full bg-gray-100 dark:bg-gray-800 h-0.5 overflow-hidden">
+              <div
+                className={`h-0.5 transition-all duration-500 ${
+                  progress === 100
+                    ? 'bg-green-500'
+                    : 'bg-blue-500'
+                }`}
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
           </div>
         </div>
 
-        {/* Render branch leaves */}
-        {leaves.length > 0 && (
-          <div className="mb-4">
-            {leaves.map(leaf => renderLeaf(leaf, leaves))}
-          </div>
-        )}
+        {/* Content container */}
+        <div className="relative mt-4">
+          {/* Render branch leaves */}
+          {leaves.length > 0 && (
+            <div className="space-y-2">
+              {leaves.map((leaf) => renderLeaf(leaf, leaves))}
+            </div>
+          )}
 
-        {/* Render child branches */}
-        {children.map(child => renderBranch(child, true))}
+          {/* Render child branches */}
+          {children.length > 0 && (
+            <div className="mt-6 space-y-6">
+              {children.map((child) => (
+                <div key={child.id}>
+                  {renderBranch(child, true, level + 1)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render a leaf
+  const renderLeaf = (leaf: Leaf, branchLeaves: Leaf[]) => {
+    const isCompleted = !!completed[leaf.id];
+    const canBeCompleted = canCompleteLeaf(leaf, branchLeaves);
+
+    return (
+      <div key={leaf.id} className="relative flex items-center group">
+        {/* Horizontal connector line */}
+        <div className="absolute left-3 top-1/2 w-3 h-[1px] bg-gray-200 dark:bg-gray-700" />
+
+        {/* Leaf bullet/node */}
+        <div className={`
+          absolute left-[11px] top-1/2 -mt-[3px] z-10 w-1.5 h-1.5 rounded-full
+          ${isCompleted
+            ? 'bg-green-500'
+            : canBeCompleted
+              ? 'bg-blue-400'
+              : 'bg-gray-300'
+          }
+        `}></div>
+
+        {/* Leaf card */}
+        <div
+          className={`
+            ml-8 py-2 px-3 rounded w-full transition-all duration-200
+            ${isCompleted
+              ? 'bg-green-50/50 dark:bg-green-900/10'
+              : canBeCompleted
+                ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer'
+                : 'opacity-75'
+            }
+          `}
+          onClick={() => canBeCompleted || isCompleted ? toggleLeafCompletion(leaf, branchLeaves) : null}
+        >
+          <div className="flex items-center">
+            <div className="w-full">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                {leaf.name}
+                {isCompleted && (
+                  <span className="ml-2 text-green-600 dark:text-green-400">✓</span>
+                )}
+              </h3>
+              <p className="text-sm text-gray-500">{leaf.content}</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -228,14 +274,19 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
   return (
     <>
       <Head title="Skill Tree" />
-      <div className="min-h-screen bg-white dark:bg-gray-900 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Your Skill Tree 🌳</h1>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-wrap items-center justify-between mb-8 gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Your Skill Tree 🌳</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Track your progress and see your learning path
+              </p>
+            </div>
             <div className="space-x-4 flex items-center">
               {!isAuthenticated && (
                 <div className="text-sm text-amber-600 dark:text-amber-400">
-                  <span className="bg-amber-100 dark:bg-amber-900 p-1 rounded">
+                  <span className="bg-amber-100 dark:bg-amber-900 p-2 rounded">
                     ⚠️ Login to save your progress across devices
                   </span>
                 </div>
@@ -254,7 +305,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
               <p className="text-gray-600 dark:text-gray-400">No skills available yet. Check back later!</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-12">
               {branches.map(branch => renderBranch(branch))}
             </div>
           )}
