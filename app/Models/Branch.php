@@ -2,9 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read Collection<Leaf> $leafs
+ * @property-read Branch|null $parent
+ * @property-read Collection<Branch> $children
+ * @property Collection<Leaf>|null $leaves
+ */
 class Branch extends Model
 {
     /** @use HasFactory<\Database\Factories\BranchFactory> */

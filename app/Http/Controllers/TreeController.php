@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
-use App\Models\Leaf;
 use App\Models\UserLeafProgress;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -26,17 +25,13 @@ class TreeController extends Controller
         // Add leaves to each branch
         foreach ($branches as $branch) {
             // Get direct leaves for this branch
-            $branch->leaves = Leaf::where('branch_id', $branch->id)
-                ->orderBy('order')
-                ->get();
+            $branch->leaves = $branch->leafs()->orderBy('order')->get();
 
             // Get leaves for each child branch
             if ($branch->children && count($branch->children) > 0) {
                 foreach ($branch->children as $childBranch) {
                     // Get leaves for the child branch
-                    $childBranch->leaves = Leaf::where('branch_id', $childBranch->id)
-                        ->orderBy('order')
-                        ->get();
+                    $childBranch->leaves = $childBranch->leafs()->orderBy('order')->get();
                 }
             }
         }
