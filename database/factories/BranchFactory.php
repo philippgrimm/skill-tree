@@ -17,7 +17,9 @@ class BranchFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->sentence(),
+            'description' => fake()->optional()->paragraph(),
+            'branch_id' => null,
         ];
     }
 }

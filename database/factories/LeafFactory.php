@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Branch;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,10 @@ class LeafFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->sentence(),
+            'content' => fake()->paragraph(),
+            'order' => fake()->numberBetween(1, 100),
+            'branch_id' => Branch::factory(),
         ];
     }
 }
