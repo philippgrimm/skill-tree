@@ -22,6 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::get('tree-admin', function () {
+        if (!\App\Guards\AdminGuard::check()) {
+            return redirect('/tree');
+        }
         return Inertia::render('tree-admin');
     })->name('tree-admin');
 });
