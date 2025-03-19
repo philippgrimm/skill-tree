@@ -11,6 +11,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    Route::get('tree-admin', function () {
+        return Inertia::render('tree-admin');
+    })->name('tree-admin');
 });
 
 require __DIR__.'/settings.php';
