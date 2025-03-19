@@ -428,12 +428,6 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
                   </span>
                 </div>
               )}
-              <button
-                onClick={resetProgress}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              >
-                Reset Progress
-              </button>
             </div>
           </div>
 
