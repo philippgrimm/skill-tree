@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { useState } from 'react';
+import ReactConfetti from 'react-confetti';
 
 // Setup axios with CSRF token
 axios.defaults.withCredentials = true;
@@ -56,6 +57,10 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     return JSON.parse(localStorage.getItem('skillTreeProgress') || '{}');
   });
 
+  // State for confetti
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiKey, setConfettiKey] = useState(0);
+
   // State to track expanded/collapsed branches
   const [expandedBranches, setExpandedBranches] = useState<Record<number, boolean>>(() => {
     // Initialize all branches as expanded
@@ -74,6 +79,17 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
       ...prev,
       [branchId]: !prev[branchId]
     }));
+  };
+
+  // Check if all leaves in a branch are completed
+  const areAllLeavesCompleted = (branch: Branch, state: Record<number, boolean> = completed): boolean => {
+    const branchLeaves = branch.leaves || [];
+    const allLeavesCompleted = branchLeaves.every(leaf => state[leaf.id]);
+
+    // Check child branches recursively
+    const allChildrenCompleted = (branch.children || []).every(child => areAllLeavesCompleted(child, state));
+
+    return allLeavesCompleted && allChildrenCompleted;
   };
 
   // Toggle leaf completion status
@@ -99,6 +115,26 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
         });
 
         setCompleted(newCompletedMap);
+
+        // Check if this completion completed all leaves in the branch
+        const branch = findBranchContainingLeaf(leaf.id, branches);
+        console.log('Debug confetti:', {
+          branchFound: !!branch,
+          branchName: branch?.name,
+          allLeavesCompleted: branch ? areAllLeavesCompleted(branch, newCompletedMap) : false,
+          leafWasCompleted: newCompletedMap[leaf.id],
+          leafId: leaf.id,
+          currentCompleted: completed[leaf.id],
+          newCompletedMap: newCompletedMap[leaf.id]
+        });
+
+        if (branch && areAllLeavesCompleted(branch, newCompletedMap) && newCompletedMap[leaf.id]) {
+          console.log('Triggering confetti!');
+          setShowConfetti(true);
+          setConfettiKey(prev => prev + 1);
+          // Hide confetti after 5 seconds
+          setTimeout(() => setShowConfetti(false), 5000);
+        }
       } catch (error) {
         console.error('Error toggling leaf completion:', error);
         if (axios.isAxiosError(error) && error.response?.status === 422) {
@@ -115,7 +151,39 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
       };
       setCompleted(newCompleted);
       localStorage.setItem('skillTreeProgress', JSON.stringify(newCompleted));
+
+      // Check if this completion completed all leaves in the branch
+      const branch = findBranchContainingLeaf(leaf.id, branches);
+      console.log('Debug confetti (local):', {
+        branchFound: !!branch,
+        branchName: branch?.name,
+        allLeavesCompleted: branch ? areAllLeavesCompleted(branch, newCompleted) : false,
+        leafWasCompleted: newCompleted[leaf.id],
+        leafId: leaf.id,
+        currentCompleted: completed[leaf.id],
+        newCompleted: newCompleted[leaf.id]
+      });
+
+      if (branch && areAllLeavesCompleted(branch, newCompleted) && newCompleted[leaf.id]) {
+        console.log('Triggering confetti!');
+        setShowConfetti(true);
+        setConfettiKey(prev => prev + 1);
+        // Hide confetti after 5 seconds
+        setTimeout(() => setShowConfetti(false), 5000);
+      }
     }
+  };
+
+  // Helper function to find a branch containing a specific leaf
+  const findBranchContainingLeaf = (leafId: number, branches: Branch[]): Branch | null => {
+    for (const branch of branches) {
+      if (branch.leaves?.some(leaf => leaf.id === leafId)) {
+        return branch;
+      }
+      const found = findBranchContainingLeaf(leafId, branch.children || []);
+      if (found) return found;
+    }
+    return null;
   };
 
   // Get completion percentage for a branch
@@ -143,7 +211,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     const previousLeaves = branchLeaves.filter(l => l.order < leaf.order);
 
     // If all previous leaves are completed, this leaf can be completed
-    return previousLeaves.every(l => completed[l.id]);
+    return previousLeaves.every(l => completed[l.id]) || completed[leaf.id];
   };
 
   // Render a branch with its leaves
@@ -322,6 +390,18 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
     <>
       <Head title="Skill Tree" />
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+        {showConfetti && (
+          <ReactConfetti
+            key={confettiKey}
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={200}
+            gravity={0.3}
+            onConfettiComplete={() => setShowConfetti(false)}
+            style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none' }}
+          />
+        )}
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-wrap items-center justify-between mb-8 gap-4">
             <div>
