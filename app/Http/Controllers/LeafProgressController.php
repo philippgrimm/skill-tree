@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Leaf;
 use App\Models\LeafProgress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LeafProgressController extends Controller
 {
@@ -20,7 +21,7 @@ class LeafProgressController extends Controller
 
             // Check if all previous leaves are completed
             $allPreviousCompleted = $previousLeaves->every(function ($previousLeaf) {
-                return LeafProgress::where('user_id', auth()->id())
+                return LeafProgress::where('user_id', Auth::id())
                     ->where('leaf_id', $previousLeaf->id)
                     ->where('completed', true)
                     ->exists();
@@ -34,7 +35,7 @@ class LeafProgressController extends Controller
         }
 
         // Toggle completion status
-        $progress = LeafProgress::where('user_id', auth()->id())
+        $progress = LeafProgress::where('user_id', Auth::id())
             ->where('leaf_id', $leaf->id)
             ->first();
 
@@ -42,7 +43,7 @@ class LeafProgressController extends Controller
             $progress->delete();
         } else {
             LeafProgress::create([
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'leaf_id' => $leaf->id,
                 'completed' => true,
                 'completed_at' => now(),
@@ -50,7 +51,7 @@ class LeafProgressController extends Controller
         }
 
         // Return updated list of completed leaves
-        $completedLeaves = LeafProgress::where('user_id', auth()->id())
+        $completedLeaves = LeafProgress::where('user_id', Auth::id())
             ->where('completed', true)
             ->pluck('leaf_id')
             ->toArray();
@@ -62,7 +63,7 @@ class LeafProgressController extends Controller
 
     public function reset()
     {
-        LeafProgress::where('user_id', auth()->id())->delete();
+        LeafProgress::where('user_id', Auth::id())->delete();
 
         return response()->json([
             'message' => 'Progress reset successfully',
@@ -71,23 +72,9 @@ class LeafProgressController extends Controller
 
     private function isLeafCompleted(Leaf $leaf): bool
     {
-        return LeafProgress::where('user_id', auth()->id())
+        return LeafProgress::where('user_id', Auth::id())
             ->where('leaf_id', $leaf->id)
             ->where('completed', true)
             ->exists();
-    }
-
-    private function canCompleteLead(Leaf $leaf): bool
-    {
-        // Implementation of canCompleteLead method
-        return true; // Placeholder return, actual implementation needed
-    }
-
-    private function getCompletedLeafIds()
-    {
-        return LeafProgress::where('user_id', auth()->id())
-            ->where('completed', true)
-            ->pluck('leaf_id')
-            ->toArray();
     }
 }

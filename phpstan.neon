@@ -1,19 +1,17 @@
 includes:
-    - ./vendor/nunomaduro/larastan/extension.neon
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
 
 parameters:
+
     paths:
-        - app
-    level: 4
-    ignoreErrors:
-        # Ignore property phpDocType errors for fillable arrays in models
-        - '#PHPDoc type array<int, string> of property .+::(\$fillable|\$hidden|\$casts) is not covariant with PHPDoc type list<string>#'
-        # Ignore unused methods
-        - '#Method .+ is unused#'
-        # Ignore relation existence errors
-        - '#Relation .+ is not found in .+ model.#'
-        # Ignore undefined property errors
-        - '#Access to an undefined property .+::\$leaves.#'
-    treatPhpDocTypesAsCertain: false
-    excludePaths:
-        # Put paths to exclude here
+        - app/
+
+    # Level 10 is the highest level
+    level: 5
+
+#    ignoreErrors:
+#        - '#PHPDoc tag @var#'
+#
+#    excludePaths:
+#        - ./*/*/FileToBeExcluded.php
