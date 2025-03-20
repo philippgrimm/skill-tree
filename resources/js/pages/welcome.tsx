@@ -1,5 +1,6 @@
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
+import GitTree from '@/components/GitTree';
 
 export default function Welcome() {
     const { auth } = usePage<SharedData>().props;
@@ -91,30 +92,7 @@ export default function Welcome() {
                             </div>
 
                             {/* Interactive visual element */}
-                            <div className="relative mt-20 h-80 w-full max-w-3xl">
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="h-64 w-64 rounded-full bg-gradient-to-b from-violet-500/30 to-indigo-500/30 blur-xl"></div>
-                                </div>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="relative h-64 w-64 rounded-full border border-neutral-700 p-4">
-                                        <div className="skill-node absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"></div>
-
-                                        <div className="skill-node absolute left-1/4 top-1/4 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-400"></div>
-                                        <div className="skill-node absolute right-1/4 top-1/4 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-400"></div>
-                                        <div className="skill-node absolute bottom-1/4 left-1/4 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400"></div>
-                                        <div className="skill-node absolute bottom-1/4 right-1/4 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-400"></div>
-
-                                        <div className="skill-node absolute left-0 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-300"></div>
-                                        <div className="skill-node absolute top-0 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-300"></div>
-                                        <div className="skill-node absolute right-0 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-300"></div>
-                                        <div className="skill-node absolute bottom-0 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-300"></div>
-
-                                        <div className="absolute inset-0 rounded-full border border-neutral-700 opacity-50"></div>
-                                        <div className="absolute inset-[-15px] rounded-full border border-neutral-800 opacity-30"></div>
-                                        <div className="absolute inset-[-30px] rounded-full border border-neutral-800 opacity-20"></div>
-                                    </div>
-                                </div>
-                            </div>
+                            <GitTree />
 
                             {/* Logos */}
                             <div className="mt-16 grid grid-cols-3 gap-8 opacity-70 lg:grid-cols-3">
@@ -347,34 +325,182 @@ export default function Welcome() {
                 </footer>
             </div>
             <style jsx global>{`
-                .skill-node {
-                    animation: pulse 2s infinite;
-                    animation-delay: calc(var(--index, 0) * 0.2s);
+                .git-node {
+                    animation: glow 4s infinite;
+                    animation-delay: calc(var(--index, 0) * 0.3s);
+                    position: relative;
+                    z-index: 10;
                 }
 
-                .skill-node:nth-child(1) { --index: 0; }
-                .skill-node:nth-child(2) { --index: 1; }
-                .skill-node:nth-child(3) { --index: 2; }
-                .skill-node:nth-child(4) { --index: 3; }
-                .skill-node:nth-child(5) { --index: 4; }
-                .skill-node:nth-child(6) { --index: 5; }
-                .skill-node:nth-child(7) { --index: 6; }
-                .skill-node:nth-child(8) { --index: 7; }
-                .skill-node:nth-child(9) { --index: 8; }
+                .connector-node {
+                    animation: pulse-glow 3s infinite;
+                    z-index: 15;
+                }
 
-                @keyframes pulse {
+                .git-node::after {
+                    content: attr(data-label);
+                    position: absolute;
+                    white-space: nowrap;
+                    font-size: 11px;
+                    font-weight: 500;
+                    color: rgba(255, 255, 255, 0.8);
+                    bottom: -16px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+
+                .git-node:hover::after {
+                    opacity: 1;
+                }
+
+                .main-node {
+                    z-index: 20;
+                    animation: pulse-glow 4s infinite;
+                }
+
+                .node-appear {
+                    animation: appear-glow 4s forwards;
+                    opacity: 0;
+                }
+
+                .branch-grow {
+                    animation: branch-grow 2s ease-out forwards;
+                    transform-origin: left;
+                    transform: scaleX(0);
+                    z-index: 2;
+                }
+
+                .branch-grow-v {
+                    animation: branch-grow-v 2s ease-out forwards;
+                    transform-origin: top;
+                    transform: scaleY(0);
+                    z-index: 2;
+                }
+
+                /* Node animation timing */
+                .git-node:nth-child(2) { --index: 0; }
+                .git-node:nth-child(3) { --index: 1; }
+                .git-node:nth-child(4) { --index: 2; }
+                .git-node:nth-child(5) { --index: 3; }
+                .git-node:nth-child(6) { --index: 4; }
+
+                .git-node:nth-child(13) { --index: 5; }
+                .git-node:nth-child(14) { --index: 6; }
+                .git-node:nth-child(15) { --index: 7; }
+                .git-node:nth-child(16) { --index: 8; }
+                .git-node:nth-child(17) { --index: 9; }
+                .git-node:nth-child(18) { --index: 10; }
+
+                .git-node:nth-child(23) { --index: 11; }
+                .git-node:nth-child(24) { --index: 12; }
+                .git-node:nth-child(25) { --index: 13; }
+                .git-node:nth-child(26) { --index: 14; }
+
+                /* Branch animation timing */
+                .git-branch:nth-child(1) { animation-delay: 0.1s; }
+
+                /* Horizontal branches */
+                .git-branch:nth-child(7) { animation-delay: 0.6s; }
+                .git-branch:nth-child(8) { animation-delay: 1.0s; }
+                .git-branch:nth-child(9) { animation-delay: 1.4s; }
+                .git-branch:nth-child(10) { animation-delay: 0.8s; }
+                .git-branch:nth-child(11) { animation-delay: 1.2s; }
+                .git-branch:nth-child(12) { animation-delay: 1.6s; }
+
+                /* Vertical branches */
+                .git-branch:nth-child(13) { animation-delay: 1.2s; }
+                .git-branch:nth-child(14) { animation-delay: 1.6s; }
+                .git-branch:nth-child(15) { animation-delay: 1.4s; }
+                .git-branch:nth-child(16) { animation-delay: 1.8s; }
+
+                /* Cross branches */
+                .git-branch:nth-child(17) { animation-delay: 1.8s; }
+                .git-branch:nth-child(18) { animation-delay: 2.2s; }
+                .git-branch:nth-child(19) { animation-delay: 2.0s; }
+                .git-branch:nth-child(20) { animation-delay: 2.4s; }
+
+                .shadow-glow {
+                    box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+                }
+
+                @keyframes glow {
+                    0% {
+                        opacity: 0.7;
+                        box-shadow: 0 0 5px rgba(167, 139, 250, 0.3);
+                    }
+                    50% {
+                        opacity: 1;
+                        box-shadow: 0 0 15px rgba(167, 139, 250, 0.8);
+                    }
+                    100% {
+                        opacity: 0.7;
+                        box-shadow: 0 0 5px rgba(167, 139, 250, 0.3);
+                    }
+                }
+
+                @keyframes pulse-glow {
                     0% {
                         transform: translate(-50%, -50%) scale(1);
                         opacity: 0.8;
+                        box-shadow: 0 0 5px rgba(167, 139, 250, 0.5);
                     }
                     50% {
-                        transform: translate(-50%, -50%) scale(1.3);
+                        transform: translate(-50%, -50%) scale(1.2);
                         opacity: 1;
+                        box-shadow: 0 0 20px rgba(167, 139, 250, 1);
                     }
                     100% {
                         transform: translate(-50%, -50%) scale(1);
                         opacity: 0.8;
+                        box-shadow: 0 0 5px rgba(167, 139, 250, 0.5);
                     }
+                }
+
+                @keyframes appear-glow {
+                    0% {
+                        opacity: 0;
+                        transform: translate(-50%, -50%) scale(0);
+                    }
+                    60% {
+                        opacity: 0;
+                    }
+                    80% {
+                        opacity: 1;
+                        transform: translate(-50%, -50%) scale(1.3);
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                }
+
+                @keyframes branch-grow {
+                    0% {
+                        transform: scaleX(0);
+                        background: linear-gradient(90deg, rgba(139, 92, 246, 0.8) 0%, rgba(79, 70, 229, 0.4) 100%);
+                    }
+                    100% {
+                        transform: scaleX(1);
+                        background: linear-gradient(90deg, rgba(79, 70, 229, 0.3) 0%, rgba(139, 92, 246, 0.4) 100%);
+                    }
+                }
+
+                @keyframes branch-grow-v {
+                    0% {
+                        transform: scaleY(0);
+                        background: linear-gradient(180deg, rgba(139, 92, 246, 0.8) 0%, rgba(79, 70, 229, 0.4) 100%);
+                    }
+                    100% {
+                        transform: scaleY(1);
+                        background: linear-gradient(180deg, rgba(79, 70, 229, 0.3) 0%, rgba(139, 92, 246, 0.4) 100%);
+                    }
+                }
+
+                .git-branch {
+                    position: absolute;
+                    background: linear-gradient(90deg, rgba(79, 70, 229, 0.3) 0%, rgba(139, 92, 246, 0.4) 100%);
                 }
             `}</style>
         </>
