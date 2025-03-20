@@ -1,0 +1,55 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method App\\Models\\Branch\:\:children\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Branch, App\\Models\\Branch\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Branch, \$this\(App\\Models\\Branch\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Branch.php
+
+		-
+			message: '#^Method App\\Models\\Branch\:\:leafs\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Leaf, App\\Models\\Branch\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Leaf, \$this\(App\\Models\\Branch\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Branch.php
+
+		-
+			message: '#^Method App\\Models\\Branch\:\:parent\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Branch, App\\Models\\Branch\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Branch, \$this\(App\\Models\\Branch\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Branch.php
+
+		-
+			message: '#^Method App\\Models\\Leaf\:\:branch\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Branch, App\\Models\\Leaf\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Branch, \$this\(App\\Models\\Leaf\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Leaf.php
+
+		-
+			message: '#^Method App\\Models\\LeafProgress\:\:leaf\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Leaf, App\\Models\\LeafProgress\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Leaf, \$this\(App\\Models\\LeafProgress\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/LeafProgress.php
+
+		-
+			message: '#^Method App\\Models\\LeafProgress\:\:user\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, App\\Models\\LeafProgress\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(App\\Models\\LeafProgress\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/LeafProgress.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:leafProgress\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\UserLeafProgress, App\\Models\\User\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\UserLeafProgress, \$this\(App\\Models\\User\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\UserLeafProgress\:\:leaf\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Leaf, App\\Models\\UserLeafProgress\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Leaf, \$this\(App\\Models\\UserLeafProgress\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/UserLeafProgress.php
+
+		-
+			message: '#^Method App\\Models\\UserLeafProgress\:\:user\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, App\\Models\\UserLeafProgress\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(App\\Models\\UserLeafProgress\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/UserLeafProgress.php
