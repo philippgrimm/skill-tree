@@ -1,6 +1,6 @@
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import GitTree from '@/components/GitTree';
+import GitTree from '@/components/tree/git-tree';
 
 export default function Welcome() {
     const { auth } = usePage<SharedData>().props;
