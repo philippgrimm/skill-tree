@@ -12,54 +12,39 @@ class TreeController extends Controller
     /**
      * Display the tree page with all branches and leaves.
      */
-    public function index()
+    public function index(): \Inertia\Response
     {
         // Get top-level branches
         $branches = Branch::whereNull('branch_id')
+            ->with(['leafs' => function ($query) {
+                $query->orderBy('order');
+            }, 'children.leafs' => function ($query) {
+                $query->orderBy('order');
+            }])
             ->orderBy('name')
             ->get();
 
-        // Add leaves to each branch
-        foreach ($branches as $branch) {
-            // Get direct leaves for this branch
-            $leaves = $branch->leafs()->orderBy('order')->get();
-            $branch->setAttribute('leaves', $leaves);
-
-            // Get child branches
-            $childBranches = $branch->children()->orderBy('name')->get();
-            $branch->setAttribute('children', $childBranches);
-
-            // Set leaves for each child branch
-            foreach ($childBranches as $childBranch) {
-                // Get leaves for the child branch
-                $childLeaves = $childBranch->leafs()->orderBy('order')->get();
-                $childBranch->setAttribute('leaves', $childLeaves);
-            }
-        }
-
-        // Prepare the data in a format compatible with the frontend
+        // Transform the branches into the expected format
         $formattedBranches = $branches->map(function ($branch) {
-            $branchData = $branch->toArray();
+            $branchData = [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'description' => $branch->description,
+                'branch_id' => $branch->branch_id,
+                'leaves' => $branch->leafs->toArray(),
+                'children' => [],
+            ];
 
-            // Ensure leaves are present in the data
-            if (! isset($branchData['leaves'])) {
-                $branchData['leaves'] = [];
-            }
-
-            if (isset($branchData['children']) && is_array($branchData['children'])) {
-                foreach ($branchData['children'] as &$child) {
-                    $childBranch = $branch->children()->where('id', $child['id'])->first();
-                    if ($childBranch) {
-                        // Get leaves array from the attribute we set earlier
-                        $leaves = $childBranch->getAttribute('leaves');
-                        $child['leaves'] = $leaves ? $leaves->toArray() : [];
-                    } else {
-                        $child['leaves'] = [];
-                    }
-                    $child['children'] = []; // Ensure child branches have empty children array
-                }
-            } else {
-                $branchData['children'] = []; // Ensure branches have empty children array if none exist
+            // Add child branches with their leaves
+            foreach ($branch->children as $childBranch) {
+                $branchData['children'][] = [
+                    'id' => $childBranch->id,
+                    'name' => $childBranch->name,
+                    'description' => $childBranch->description,
+                    'branch_id' => $childBranch->branch_id,
+                    'leaves' => $childBranch->leafs->toArray(),
+                    'children' => [], // Child branches don't have their own children in the frontend
+                ];
             }
 
             return $branchData;

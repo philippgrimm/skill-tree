@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property-read Collection<Leaf> $leafs
+ * @property-read Collection<int, Leaf> $leafs
  * @property-read Branch|null $parent
- * @property-read Collection<Branch> $children
- * @property Collection<Leaf>|null $leaves
+ * @property-read Collection<int, Branch> $children
+ * @property Collection<int, Leaf>|null $leaves
  */
 class Branch extends Model
 {
@@ -40,24 +40,30 @@ class Branch extends Model
 
     /**
      * Get the leaves for the branch.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Leaf, \App\Models\Branch>
      */
-    public function leafs()
+    public function leafs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Leaf::class);
     }
 
     /**
      * Get the parent branch.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Branch, \App\Models\Branch>
      */
-    public function parent()
+    public function parent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     /**
      * Get the child branches.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Branch, \App\Models\Branch>
      */
-    public function children()
+    public function children(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Branch::class, 'branch_id');
     }

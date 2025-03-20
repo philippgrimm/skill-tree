@@ -9,7 +9,10 @@ use Illuminate\Support\Facades\Auth;
 
 class LeafProgressController extends Controller
 {
-    public function toggle(Request $request, Leaf $leaf)
+    /**
+     * Toggle the completion status of a leaf.
+     */
+    public function toggle(Request $request, Leaf $leaf): \Illuminate\Http\JsonResponse
     {
         $validateOrder = $request->boolean('validate_order', false);
 
@@ -61,7 +64,10 @@ class LeafProgressController extends Controller
         ]);
     }
 
-    public function reset()
+    /**
+     * Reset all progress for the authenticated user.
+     */
+    public function reset(): \Illuminate\Http\JsonResponse
     {
         LeafProgress::where('user_id', Auth::id())->delete();
 

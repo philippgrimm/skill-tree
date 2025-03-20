@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserLeafProgress extends Model
 {
-    use HasFactory;
-
     /**
      * The table associated with the model.
      *
@@ -41,6 +38,8 @@ class UserLeafProgress extends Model
 
     /**
      * Get the user that owns the progress.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, \App\Models\UserLeafProgress>
      */
     public function user(): BelongsTo
     {
@@ -49,6 +48,8 @@ class UserLeafProgress extends Model
 
     /**
      * Get the leaf that this progress is for.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Leaf, \App\Models\UserLeafProgress>
      */
     public function leaf(): BelongsTo
     {

@@ -50,6 +50,8 @@ class User extends Authenticatable
 
     /**
      * Get the user's progress on skill tree leaves.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\UserLeafProgress, \App\Models\User>
      */
     public function leafProgress(): HasMany
     {

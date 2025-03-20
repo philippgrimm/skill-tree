@@ -36,6 +36,8 @@ class Leaf extends Model
 
     /**
      * Get the branch that owns the leaf.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Branch, \App\Models\Leaf>
      */
     public function branch(): BelongsTo
     {

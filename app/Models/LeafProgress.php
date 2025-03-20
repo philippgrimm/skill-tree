@@ -21,11 +21,21 @@ class LeafProgress extends Model
         'completed_at' => 'datetime',
     ];
 
+    /**
+     * Get the user that owns the progress.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, \App\Models\LeafProgress>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Get the leaf that this progress is for.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Leaf, \App\Models\LeafProgress>
+     */
     public function leaf(): BelongsTo
     {
         return $this->belongsTo(Leaf::class);
