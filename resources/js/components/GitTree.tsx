@@ -253,9 +253,21 @@ export default function StylizedGitGraph() {
     }
   }
 
+  // Generate random particles for a node
+  const generateParticles = (count: number) => {
+    return Array.from({ length: count }).map((_, i) => ({
+      id: i,
+      size: Math.random() * 2 + 1,
+      x: Math.random() * 40 - 20, // -20 to 20
+      y: Math.random() * 40 - 20, // -20 to 20
+      duration: Math.random() * 1.5 + 1.5,
+      delay: Math.random() * 0.5,
+    }))
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div ref={containerRef} className="relative aspect-video w-full bg-slate-900 rounded-xl overflow-hidden p-4">
+      <div ref={containerRef} className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-900">
         {/* Subtle grid background for depth */}
         <div className="absolute inset-0 grid grid-cols-10 grid-rows-10 opacity-5 pointer-events-none">
           {Array.from({ length: 100 }).map((_, i) => (
@@ -264,9 +276,17 @@ export default function StylizedGitGraph() {
         </div>
 
         {/* Create a positioned container for SVG and nodes to share the same coordinate system */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 p-4">
           {/* Render connections with 90-degree angles */}
           <svg className="absolute inset-0 w-full h-full">
+            {/* Line trace effect */}
+            <defs>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
             {nodes.map((node) =>
               node.connections.map((connection) => {
                 const targetNode = nodes.find((n) => n.id === connection.target)
@@ -303,6 +323,22 @@ export default function StylizedGitGraph() {
                         transition={{ duration: 0.5, ease: "easeInOut" }}
                       />
 
+                      {/* Glow effect for first segment */}
+                      <motion.line
+                        x1={`${node.x}%`}
+                        y1={`${node.y}%`}
+                        x2={`${midX}%`}
+                        y2={`${midY}%`}
+                        className={getLineColor(node.type, isActive)}
+                        strokeWidth={3}
+                        strokeOpacity={0.5}
+                        filter="url(#glow)"
+                        strokeDasharray={getLineStyle(connection.type)}
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: isActive ? 1 : 0 }}
+                        transition={{ duration: 0.5, ease: "easeInOut", delay: 0.05 }}
+                      />
+
                       {/* Second segment */}
                       <motion.line
                         x1={`${midX}%`}
@@ -316,24 +352,57 @@ export default function StylizedGitGraph() {
                         animate={{ pathLength: isActive ? 1 : 0 }}
                         transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
                       />
+
+                      {/* Glow effect for second segment */}
+                      <motion.line
+                        x1={`${midX}%`}
+                        y1={`${midY}%`}
+                        x2={`${targetNode.x}%`}
+                        y2={`${targetNode.y}%`}
+                        className={getLineColor(node.type, isActive)}
+                        strokeWidth={3}
+                        strokeOpacity={0.5}
+                        filter="url(#glow)"
+                        strokeDasharray={getLineStyle(connection.type)}
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: isActive ? 1 : 0 }}
+                        transition={{ duration: 0.5, ease: "easeInOut", delay: 0.25 }}
+                      />
                     </g>
                   )
                 } else {
                   // Straight line (either horizontal or vertical)
                   return (
-                    <motion.line
-                      key={connectionKey}
-                      x1={`${node.x}%`}
-                      y1={`${node.y}%`}
-                      x2={`${targetNode.x}%`}
-                      y2={`${targetNode.y}%`}
-                      className={getLineColor(node.type, isActive)}
-                      strokeWidth={2}
-                      strokeDasharray={getLineStyle(connection.type)}
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: isActive ? 1 : 0 }}
-                      transition={{ duration: 0.5, ease: "easeInOut" }}
-                    />
+                    <g key={connectionKey}>
+                      <motion.line
+                        x1={`${node.x}%`}
+                        y1={`${node.y}%`}
+                        x2={`${targetNode.x}%`}
+                        y2={`${targetNode.y}%`}
+                        className={getLineColor(node.type, isActive)}
+                        strokeWidth={2}
+                        strokeDasharray={getLineStyle(connection.type)}
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: isActive ? 1 : 0 }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                      />
+
+                      {/* Glow effect */}
+                      <motion.line
+                        x1={`${node.x}%`}
+                        y1={`${node.y}%`}
+                        x2={`${targetNode.x}%`}
+                        y2={`${targetNode.y}%`}
+                        className={getLineColor(node.type, isActive)}
+                        strokeWidth={3}
+                        strokeOpacity={0.5}
+                        filter="url(#glow)"
+                        strokeDasharray={getLineStyle(connection.type)}
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: isActive ? 1 : 0 }}
+                        transition={{ duration: 0.5, ease: "easeInOut", delay: 0.05 }}
+                      />
+                    </g>
                   )
                 }
               }),
@@ -344,6 +413,7 @@ export default function StylizedGitGraph() {
           {nodes.map((node) => {
             const nodeSize = node.size || 6
             const pulseSize = nodeSize * 3
+            const particles = generateParticles(8)
 
             return (
               <div
@@ -356,33 +426,93 @@ export default function StylizedGitGraph() {
                   height: 0,
                 }}
               >
-                {/* Pulse effect for active nodes */}
+                {/* Particle effects */}
                 <AnimatePresence>
                   {node.active && (
-                    <motion.div
-                      className={`absolute rounded-full ${getNodeColor(node.type, true)} opacity-30`}
-                      style={{
-                        width: `${pulseSize}px`,
-                        height: `${pulseSize}px`,
-                        marginLeft: `-${pulseSize / 2}px`,
-                        marginTop: `-${pulseSize / 2}px`,
-                      }}
-                      initial={{ scale: 0.8, opacity: 0.3 }}
-                      animate={{
-                        scale: [0.8, 1.5, 0.8],
-                        opacity: [0.3, 0, 0.3],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Number.POSITIVE_INFINITY,
-                        repeatType: "loop",
-                      }}
-                      exit={{ opacity: 0, scale: 0 }}
-                    />
+                    <>
+                      {particles.map((particle) => (
+                        <motion.div
+                          key={`particle-${node.id}-${particle.id}`}
+                          className={`absolute rounded-full ${getNodeColor(node.type, true)} opacity-60`}
+                          style={{
+                            width: `${particle.size}px`,
+                            height: `${particle.size}px`,
+                          }}
+                          initial={{
+                            x: 0,
+                            y: 0,
+                            opacity: 0.8,
+                          }}
+                          animate={{
+                            x: particle.x,
+                            y: particle.y,
+                            opacity: 0,
+                          }}
+                          transition={{
+                            duration: particle.duration,
+                            delay: particle.delay,
+                            repeat: Number.POSITIVE_INFINITY,
+                            repeatType: "loop",
+                          }}
+                        />
+                      ))}
+                    </>
                   )}
                 </AnimatePresence>
 
-                {/* The node itself */}
+                {/* Multi-layered pulse effect */}
+                <AnimatePresence>
+                  {node.active && (
+                    <>
+                      {/* Outer pulse */}
+                      <motion.div
+                        className={`absolute rounded-full ${getNodeColor(node.type, true)} opacity-20`}
+                        style={{
+                          width: `${pulseSize * 1.5}px`,
+                          height: `${pulseSize * 1.5}px`,
+                          marginLeft: `-${(pulseSize * 1.5) / 2}px`,
+                          marginTop: `-${(pulseSize * 1.5) / 2}px`,
+                        }}
+                        initial={{ scale: 0.8, opacity: 0.2 }}
+                        animate={{
+                          scale: [0.8, 1.3, 0.8],
+                          opacity: [0.2, 0, 0.2],
+                        }}
+                        transition={{
+                          duration: 4,
+                          repeat: Number.POSITIVE_INFINITY,
+                          repeatType: "loop",
+                        }}
+                        exit={{ opacity: 0, scale: 0 }}
+                      />
+
+                      {/* Middle pulse */}
+                      <motion.div
+                        className={`absolute rounded-full ${getNodeColor(node.type, true)} opacity-30`}
+                        style={{
+                          width: `${pulseSize}px`,
+                          height: `${pulseSize}px`,
+                          marginLeft: `-${pulseSize / 2}px`,
+                          marginTop: `-${pulseSize / 2}px`,
+                        }}
+                        initial={{ scale: 0.8, opacity: 0.3 }}
+                        animate={{
+                          scale: [0.8, 1.5, 0.8],
+                          opacity: [0.3, 0, 0.3],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Number.POSITIVE_INFINITY,
+                          repeatType: "loop",
+                          delay: 0.5,
+                        }}
+                        exit={{ opacity: 0, scale: 0 }}
+                      />
+                    </>
+                  )}
+                </AnimatePresence>
+
+                {/* The node itself with enhanced entrance */}
                 <motion.div
                   className={`absolute rounded-full ${getNodeColor(node.type, node.active)} ${getNodeGlow(node.type, node.active)} transition-colors duration-300`}
                   style={{
@@ -391,16 +521,18 @@ export default function StylizedGitGraph() {
                     marginLeft: `-${nodeSize / 2}px`,
                     marginTop: `-${nodeSize / 2}px`,
                   }}
-                  initial={{ scale: 0 }}
+                  initial={{ scale: 0, opacity: 0 }}
                   animate={{
                     scale: node.active ? 1 : 0,
+                    opacity: node.active ? 1 : 0,
                   }}
                   transition={{
                     type: "spring",
                     stiffness: 500,
-                    damping: 30,
+                    damping: 15,
                     delay: 0.1,
                   }}
+                  whileHover={{ scale: 1.2 }}
                 />
               </div>
             )
