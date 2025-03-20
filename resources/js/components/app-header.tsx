@@ -44,7 +44,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
-    
+
     // Filter navigation items based on user admin status
     const isAdmin = auth.user.is_admin || false;
     const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
