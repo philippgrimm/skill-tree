@@ -92,7 +92,10 @@ export default function Welcome() {
                             </div>
 
                             {/* Interactive visual element */}
-                            <GitTree />
+                            <div className='mt-4 w-full'>
+                                <GitTree />
+                            </div>
+
 
                             {/* Logos */}
                             <div className="mt-16 grid grid-cols-3 gap-8 opacity-70 lg:grid-cols-3">
