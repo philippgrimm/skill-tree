@@ -367,26 +367,6 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
   };
 
   // Reset progress
-  const resetProgress = async () => {
-    if (!confirm('Are you sure you want to reset your progress?')) {
-      return;
-    }
-
-    if (isAuthenticated) {
-      try {
-        // Call API to reset progress
-        await axios.post('/api/leaf-progress/reset');
-        setCompleted({});
-      } catch (error) {
-        console.error('Error resetting progress:', error);
-        alert('Failed to reset progress. Please try again.');
-      }
-    } else {
-      // Reset localStorage for non-authenticated users
-      setCompleted({});
-      localStorage.removeItem('skillTreeProgress');
-    }
-  };
 
   // Define breadcrumbs
   const breadcrumbs: BreadcrumbItem[] = [
@@ -412,7 +392,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
             style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none' }}
           />
         )}
-        <div className="max-w-5xl mx-auto">
+        <div>
           <div className="flex flex-wrap items-center justify-between mb-8 gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Your Learning Path 🚉</h1>
@@ -436,7 +416,7 @@ export default function Tree({ branches, completedLeaves, isAuthenticated }: Tre
               <p className="text-gray-600 dark:text-gray-400">No skills available yet. Check back later!</p>
             </div>
           ) : (
-            <div className="relative space-y-4">
+            <div className="relative max-w-5xl space-y-4">
               {branches.map((branch) => renderBranch(branch))}
             </div>
           )}
