@@ -1,15 +1,20 @@
-import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Plus, Edit, Trash2, Menu } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd';
+import { Head } from '@inertiajs/react';
+import axios from 'axios';
+import { ChevronDown, Edit, Menu, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 // Setup axios with CSRF token
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -50,14 +55,14 @@ export default function TreeAdmin() {
         id: 0,
         name: '',
         description: '',
-        branch_id: null as number | null
+        branch_id: null as number | null,
     });
 
     const [leafForm, setLeafForm] = useState({
         id: 0,
         name: '',
         content: '',
-        branch_id: selectedBranch?.id || 0
+        branch_id: selectedBranch?.id || 0,
     });
 
     // Expanded state for branches
@@ -140,7 +145,7 @@ export default function TreeAdmin() {
                 const children = await fetchChildBranches(branchForm.branch_id);
                 setChildBranches({
                     ...childBranches,
-                    [branchForm.branch_id]: children
+                    [branchForm.branch_id]: children,
                 });
             }
         } catch (error) {
@@ -158,7 +163,7 @@ export default function TreeAdmin() {
             } else {
                 await axios.post('/api/leaves', {
                     ...leafForm,
-                    branch_id: selectedBranch?.id
+                    branch_id: selectedBranch?.id,
                 });
             }
 
@@ -177,7 +182,11 @@ export default function TreeAdmin() {
 
     // Delete a branch
     const deleteBranch = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this branch? All leaves in this branch will also be deleted.')) {
+        if (
+            !confirm(
+                'Are you sure you want to delete this branch? All leaves in this branch will also be deleted.'
+            )
+        ) {
             return;
         }
 
@@ -219,7 +228,7 @@ export default function TreeAdmin() {
             id: branch.id,
             name: branch.name,
             description: branch.description || '',
-            branch_id: branch.branch_id
+            branch_id: branch.branch_id,
         });
         setIsEditing(true);
         setBranchModalOpen(true);
@@ -231,7 +240,7 @@ export default function TreeAdmin() {
             id: leaf.id,
             name: leaf.name,
             content: leaf.content,
-            branch_id: leaf.branch_id
+            branch_id: leaf.branch_id,
         });
         setIsEditing(true);
         setLeafModalOpen(true);
@@ -257,7 +266,7 @@ export default function TreeAdmin() {
         // Send updated order to backend
         try {
             await axios.post(`/api/branches/${selectedBranch?.id}/reorder-leaves`, {
-                leafIds: reorderedLeaves.map(leaf => leaf.id)
+                leafIds: reorderedLeaves.map((leaf) => leaf.id),
             });
         } catch (error) {
             console.error('Error reordering leaves:', error);
@@ -285,18 +294,18 @@ export default function TreeAdmin() {
             // If already expanded, collapse
             setExpandedBranches({
                 ...expandedBranches,
-                [branchId]: false
+                [branchId]: false,
             });
         } else {
             // If not expanded, fetch child branches and expand
             const children = await fetchChildBranches(branchId);
             setChildBranches({
                 ...childBranches,
-                [branchId]: children
+                [branchId]: children,
             });
             setExpandedBranches({
                 ...expandedBranches,
-                [branchId]: true
+                [branchId]: true,
             });
         }
     };
@@ -305,11 +314,13 @@ export default function TreeAdmin() {
     const renderBranchItem = (branch: Branch, isChild: boolean = false) => (
         <div key={branch.id}>
             <div
-                className={`p-3 rounded-lg flex items-center justify-between cursor-pointer ${
+                className={`flex cursor-pointer items-center justify-between rounded-lg p-3 ${
                     selectedBranch?.id === branch.id
                         ? 'bg-primary text-primary-foreground'
-                        : isChild ? 'bg-muted/50 hover:bg-muted' : 'bg-card hover:bg-muted'
-                } ${isChild ? 'ml-4 border-l-2 border-muted' : ''}`}
+                        : isChild
+                          ? 'bg-muted/50 hover:bg-muted'
+                          : 'bg-card hover:bg-muted'
+                } ${isChild ? 'border-muted ml-4 border-l-2' : ''}`}
                 onClick={() => setSelectedBranch(branch)}
             >
                 <div>
@@ -323,7 +334,7 @@ export default function TreeAdmin() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 mr-1"
+                            className="mr-1 h-8 w-8 p-0"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 toggleBranchExpansion(branch.id);
@@ -342,10 +353,10 @@ export default function TreeAdmin() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => editBranch(branch)}>
-                                <Edit className="h-4 w-4 mr-2" /> Edit Branch
+                                <Edit className="mr-2 h-4 w-4" /> Edit Branch
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => deleteBranch(branch.id)}>
-                                <Trash2 className="h-4 w-4 mr-2" /> Delete Branch
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete Branch
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -355,7 +366,7 @@ export default function TreeAdmin() {
             {/* Render child branches if expanded */}
             {expandedBranches[branch.id] && childBranches[branch.id]?.length > 0 && (
                 <div className="mt-1 space-y-1">
-                    {childBranches[branch.id].map(childBranch =>
+                    {childBranches[branch.id].map((childBranch) =>
                         renderBranchItem(childBranch, true)
                     )}
                 </div>
@@ -376,23 +387,23 @@ export default function TreeAdmin() {
             <Head title="Tree Admin" />
             <div className="flex h-full flex-1 flex-col gap-4 p-4">
                 <h1 className="text-2xl font-bold">Tree Administration</h1>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-4">
+                <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-5">
                     {/* Branches Panel */}
                     <Card className="md:col-span-2">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-xl">Branches</CardTitle>
                             <Button size="sm" onClick={openNewBranchModal}>
-                                <Plus className="h-4 w-4 mr-1" /> New Branch
+                                <Plus className="mr-1 h-4 w-4" /> New Branch
                             </Button>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
                                 {branches.length === 0 ? (
-                                    <div className="text-center py-4 text-muted-foreground">
+                                    <div className="text-muted-foreground py-4 text-center">
                                         No branches found. Create one to get started.
                                     </div>
                                 ) : (
-                                    branches.map(branch => renderBranchItem(branch))
+                                    branches.map((branch) => renderBranchItem(branch))
                                 )}
                             </div>
                         </CardContent>
@@ -406,17 +417,17 @@ export default function TreeAdmin() {
                             </CardTitle>
                             {selectedBranch && (
                                 <Button size="sm" onClick={openNewLeafModal}>
-                                    <Plus className="h-4 w-4 mr-1" /> New Leaf
+                                    <Plus className="mr-1 h-4 w-4" /> New Leaf
                                 </Button>
                             )}
                         </CardHeader>
                         <CardContent>
                             {!selectedBranch ? (
-                                <div className="text-center py-4 text-muted-foreground">
+                                <div className="text-muted-foreground py-4 text-center">
                                     Select a branch to view its leaves
                                 </div>
                             ) : leaves.length === 0 ? (
-                                <div className="text-center py-4 text-muted-foreground">
+                                <div className="text-muted-foreground py-4 text-center">
                                     No leaves found in this branch. Create one to get started.
                                 </div>
                             ) : (
@@ -429,26 +440,49 @@ export default function TreeAdmin() {
                                                 className="space-y-2"
                                             >
                                                 {leaves.map((leaf, index) => (
-                                                    <Draggable key={leaf.id} draggableId={leaf.id.toString()} index={index}>
+                                                    <Draggable
+                                                        key={leaf.id}
+                                                        draggableId={leaf.id.toString()}
+                                                        index={index}
+                                                    >
                                                         {(provided) => (
                                                             <div
                                                                 ref={provided.innerRef}
                                                                 {...provided.draggableProps}
-                                                                className="p-3 rounded-lg bg-card hover:bg-muted flex items-center justify-between"
+                                                                className="bg-card hover:bg-muted flex items-center justify-between rounded-lg p-3"
                                                             >
                                                                 <div className="flex items-center">
-                                                                    <div {...provided.dragHandleProps} className="mr-2">
-                                                                        <Menu className="h-4 w-4 text-muted-foreground" />
+                                                                    <div
+                                                                        {...provided.dragHandleProps}
+                                                                        className="mr-2"
+                                                                    >
+                                                                        <Menu className="text-muted-foreground h-4 w-4" />
                                                                     </div>
                                                                     <div>
-                                                                        <div className="font-medium">{leaf.name}</div>
+                                                                        <div className="font-medium">
+                                                                            {leaf.name}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex items-center space-x-1">
-                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => editLeaf(leaf)}>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-8 w-8 p-0"
+                                                                        onClick={() =>
+                                                                            editLeaf(leaf)
+                                                                        }
+                                                                    >
                                                                         <Edit className="h-4 w-4" />
                                                                     </Button>
-                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => deleteLeaf(leaf.id)}>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-8 w-8 p-0"
+                                                                        onClick={() =>
+                                                                            deleteLeaf(leaf.id)
+                                                                        }
+                                                                    >
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </Button>
                                                                 </div>
@@ -470,41 +504,60 @@ export default function TreeAdmin() {
                 <Dialog open={branchModalOpen} onOpenChange={setBranchModalOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>{isEditing ? 'Edit Branch' : 'Create New Branch'}</DialogTitle>
+                            <DialogTitle>
+                                {isEditing ? 'Edit Branch' : 'Create New Branch'}
+                            </DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleBranchSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <label htmlFor="name" className="text-sm font-medium">Name</label>
+                                <label htmlFor="name" className="text-sm font-medium">
+                                    Name
+                                </label>
                                 <Input
                                     id="name"
                                     value={branchForm.name}
-                                    onChange={(e) => setBranchForm({...branchForm, name: e.target.value})}
+                                    onChange={(e) =>
+                                        setBranchForm({ ...branchForm, name: e.target.value })
+                                    }
                                     placeholder="Enter branch name"
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label htmlFor="description" className="text-sm font-medium">Description (optional)</label>
+                                <label htmlFor="description" className="text-sm font-medium">
+                                    Description (optional)
+                                </label>
                                 <Input
                                     id="description"
                                     value={branchForm.description}
-                                    onChange={(e) => setBranchForm({...branchForm, description: e.target.value})}
+                                    onChange={(e) =>
+                                        setBranchForm({
+                                            ...branchForm,
+                                            description: e.target.value,
+                                        })
+                                    }
                                     placeholder="Enter branch description"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label htmlFor="parent" className="text-sm font-medium">Parent Branch (optional)</label>
+                                <label htmlFor="parent" className="text-sm font-medium">
+                                    Parent Branch (optional)
+                                </label>
                                 <select
                                     id="parent"
-                                    value={branchForm.branch_id?.toString() || ""}
-                                    onChange={(e) => setBranchForm({
-                                        ...branchForm,
-                                        branch_id: e.target.value ? parseInt(e.target.value, 10) : null
-                                    })}
-                                    className="w-full p-2 border rounded-md"
+                                    value={branchForm.branch_id?.toString() || ''}
+                                    onChange={(e) =>
+                                        setBranchForm({
+                                            ...branchForm,
+                                            branch_id: e.target.value
+                                                ? parseInt(e.target.value, 10)
+                                                : null,
+                                        })
+                                    }
+                                    className="w-full rounded-md border p-2"
                                 >
                                     <option value="">None (Top Level)</option>
-                                    {branches.map(branch => (
+                                    {branches.map((branch) => (
                                         <option key={branch.id} value={branch.id.toString()}>
                                             {branch.name}
                                         </option>
@@ -512,12 +565,14 @@ export default function TreeAdmin() {
                                 </select>
                             </div>
                             <div className="flex justify-end space-x-2 pt-4">
-                                <Button type="button" variant="outline" onClick={() => setBranchModalOpen(false)}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setBranchModalOpen(false)}
+                                >
                                     Cancel
                                 </Button>
-                                <Button type="submit">
-                                    {isEditing ? 'Update' : 'Create'}
-                                </Button>
+                                <Button type="submit">{isEditing ? 'Update' : 'Create'}</Button>
                             </div>
                         </form>
                     </DialogContent>
@@ -531,34 +586,44 @@ export default function TreeAdmin() {
                         </DialogHeader>
                         <form onSubmit={handleLeafSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <label htmlFor="leafName" className="text-sm font-medium">Name</label>
+                                <label htmlFor="leafName" className="text-sm font-medium">
+                                    Name
+                                </label>
                                 <Input
                                     id="leafName"
                                     value={leafForm.name}
-                                    onChange={(e) => setLeafForm({...leafForm, name: e.target.value})}
+                                    onChange={(e) =>
+                                        setLeafForm({ ...leafForm, name: e.target.value })
+                                    }
                                     placeholder="Enter leaf name"
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label htmlFor="content" className="text-sm font-medium">Content</label>
-                                <div className="border rounded-md">
+                                <label htmlFor="content" className="text-sm font-medium">
+                                    Content
+                                </label>
+                                <div className="rounded-md border">
                                     <textarea
                                         id="content"
                                         value={leafForm.content}
-                                        onChange={(e) => setLeafForm({...leafForm, content: e.target.value})}
-                                        className="w-full h-32 p-2 rounded-md resize-none focus:outline-none"
+                                        onChange={(e) =>
+                                            setLeafForm({ ...leafForm, content: e.target.value })
+                                        }
+                                        className="h-32 w-full resize-none rounded-md p-2 focus:outline-none"
                                         placeholder="Enter leaf content"
                                     />
                                 </div>
                             </div>
                             <div className="flex justify-end space-x-2 pt-4">
-                                <Button type="button" variant="outline" onClick={() => setLeafModalOpen(false)}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setLeafModalOpen(false)}
+                                >
                                     Cancel
                                 </Button>
-                                <Button type="submit">
-                                    {isEditing ? 'Update' : 'Create'}
-                                </Button>
+                                <Button type="submit">{isEditing ? 'Update' : 'Create'}</Button>
                             </div>
                         </form>
                     </DialogContent>

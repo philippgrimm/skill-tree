@@ -1,12 +1,15 @@
 {
     "semi": true,
+    "tabWidth": 4,
+    "printWidth": 100,
     "singleQuote": true,
+    "trailingComma": "es5",
+    "bracketSpacing": true,
+    "arrowParens": "always",
     "singleAttributePerLine": false,
     "htmlWhitespaceSensitivity": "css",
-    "printWidth": 150,
     "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-tailwindcss"],
     "tailwindFunctions": ["clsx", "cn"],
-    "tabWidth": 4,
     "overrides": [
         {
             "files": "**/*.yml",

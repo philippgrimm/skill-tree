@@ -2,12 +2,11 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
-        "format": "prettier --write resources/",
+        "build": "vite build && vite build --ssr",
+        "format": "prettier --write 'resources/js/**/*.{js,jsx,ts,tsx,css}'",
         "format:check": "prettier --check resources/",
-        "lint": "eslint . --fix",
+        "lint": "eslint resources/js --fix",
         "types": "tsc --noEmit"
     },
     "devDependencies": {

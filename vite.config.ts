@@ -23,13 +23,4 @@ export default defineConfig({
             'ziggy-js': resolve(__dirname, 'vendor/tightenco/ziggy'),
         },
     },
-    build: {
-        // Ensure tree-admin.tsx is included in the build
-        rollupOptions: {
-            input: {
-                main: resolve(__dirname, 'resources/js/app.tsx'),
-                pages: resolve(__dirname, 'resources/js/pages/tree-admin.tsx'),
-            },
-        },
-    },
 });
